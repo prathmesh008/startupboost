@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { Bridge } from '@/lib/bridge';
-import { Vault } from '@/lib/vault';
+import { Bridge } from '@/lib/api';
+import { Vault } from '@/lib/auth';
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 
 // --- Custom Components ---

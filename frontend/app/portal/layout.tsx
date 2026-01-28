@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Vault } from '@/lib/vault';
+import { Vault } from '@/lib/auth';
 import { PortalSidebar } from '@/components/visuals/PortalSidebar';
 
 export default function PortalLayout({

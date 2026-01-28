@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Vault } from '@/lib/vault';
+import { Vault } from '@/lib/auth';
 
 export const NavBar = () => {
     const router = useRouter();

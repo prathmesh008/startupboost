@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Bridge } from '@/lib/bridge';
-import { Vault } from '@/lib/vault';
+import { Bridge } from '@/lib/api';
+import { Vault } from '@/lib/auth';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 

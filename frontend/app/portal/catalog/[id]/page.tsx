@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Bridge } from '@/lib/bridge';
-import { Vault } from '@/lib/vault';
+import { Bridge } from '@/lib/api';
+import { Vault } from '@/lib/auth';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
@@ -36,7 +36,8 @@ export default function DealDetailsPage() {
         setClaiming(true);
         setMessage(null);
         try {
-            const token = Vault.retrievePass();
+            const token = Vault.retrievePass() || undefined;
+            if (!token) throw new Error("Unauthorized");
             const res = await Bridge.interact(`/market/claim/${id}`, {
                 method: 'POST',
                 token

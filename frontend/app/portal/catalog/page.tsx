@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Bridge } from '@/lib/bridge';
-import { Vault } from '@/lib/vault';
+import { Bridge } from '@/lib/api';
+import { Vault } from '@/lib/auth';
 import { DealCard } from '@/components/blocks/DealCard';
 import { motion, AnimatePresence } from 'framer-motion';
 

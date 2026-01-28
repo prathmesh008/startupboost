@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Vault } from '@/lib/vault';
+import { Vault } from '@/lib/auth';
 import { motion } from 'framer-motion';
 import { LayoutDashboard, CreditCard, Settings, LogOut, Layers } from 'lucide-react';
 

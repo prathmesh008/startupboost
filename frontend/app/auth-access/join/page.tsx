@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Bridge } from '@/lib/bridge';
+import { Bridge } from '@/lib/api';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 
