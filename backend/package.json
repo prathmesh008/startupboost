@@ -5,6 +5,7 @@
     "scripts": {
         "ignite": "ts-node server.ts",
         "build": "tsc",
+        "prestart": "npm run build",
         "start": "node dist/server.js"
     },
     "dependencies": {
