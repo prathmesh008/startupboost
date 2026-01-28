@@ -1,9 +1,9 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import { EntityUser } from './models/EntityUser';
-import { EntityPerk } from './models/EntityPerk';
-import { EntityClaim } from './models/EntityClaim';
-import { encryptSecret } from './wires/security';
+import { EntityUser as User } from './models/User';
+import { EntityPerk as Deal } from './models/Deal';
+import { EntityClaim as Claim } from './models/Claim';
+import { encryptSecret } from './utils/security';
 
 dotenv.config();
 
@@ -19,15 +19,15 @@ const performSeed = async () => {
 
         // 1. Purge Existing Records
         await Promise.all([
-            EntityUser.deleteMany({}),
-            EntityPerk.deleteMany({}),
-            EntityClaim.deleteMany({})
+            User.deleteMany({}),
+            Deal.deleteMany({}),
+            Claim.deleteMany({})
         ]);
         console.log('>> Previous Data Purged.');
 
         // 2. Create Demo User
         const hashedKey = await encryptSecret('demo123');
-        const demoUser = await EntityUser.create({
+        const demoUser = await User.create({
             alias_name: 'Demo Founder',
             digital_contact: 'founder@demo.com',
             access_key: hashedKey,
@@ -88,16 +88,16 @@ const performSeed = async () => {
             }
         ];
 
-        const perks = await EntityPerk.insertMany(perksData);
+        const perks = await Deal.insertMany(perksData);
         console.log(`>> Catalog Populated: ${perks.length} Assets.`);
 
         // 4. Create Sample Claims
         // Link AWS and Figma to the demo user
-        const awsPerk = perks.find(p => p.provider_identity === 'Amazon Web Services');
-        const figmaPerk = perks.find(p => p.provider_identity === 'Figma');
+        const awsPerk = perks.find((p: any) => p.provider_identity === 'Amazon Web Services');
+        const figmaPerk = perks.find((p: any) => p.provider_identity === 'Figma');
 
         if (awsPerk && figmaPerk) {
-            await EntityClaim.create([
+            await Claim.create([
                 {
                     beneficiary_id: demoUser._id,
                     asset_reference_id: awsPerk._id,
