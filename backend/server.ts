@@ -1,8 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { establishDataLink } from './wires/database';
-import trafficController from './routes/access_point';
+import { establishDataLink } from './utils/database';
+import apiRoutes from './routes/api';
 
 dotenv.config();
 
@@ -23,7 +23,7 @@ const bootSystem = async () => {
     await establishDataLink();
 
     // Mount Router
-    app.use('/api/v1', trafficController);
+    app.use('/api/v1', apiRoutes);
 
     app.get('/', (req, res) => {
         res.send(':: Core System Online ::');

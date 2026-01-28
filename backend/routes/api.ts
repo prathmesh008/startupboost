@@ -1,14 +1,14 @@
 import express, { Request, Response } from 'express';
-import { EntityUser } from '../models/EntityUser';
-import { EntityPerk } from '../models/EntityPerk';
-import { EntityClaim } from '../models/EntityClaim';
-import { encryptSecret, validateSecret, issueAccessPass, activeSessionGuard, verifiedFounderGuard, ProtectedRequest } from '../wires/security';
+import { EntityUser as User } from '../models/User';
+import { EntityPerk as Deal } from '../models/Deal';
+import { EntityClaim as Claim } from '../models/Claim';
+import { encryptSecret, validateSecret, issueAccessPass, activeSessionGuard, verifiedFounderGuard, ProtectedRequest } from '../utils/security';
 
-const trafficController = express.Router();
+const apiRoutes = express.Router();
 
 // --- Authentication Zone ---
 
-trafficController.post('/auth/initiate', async (req: Request, res: Response) => {
+apiRoutes.post('/auth/initiate', async (req: Request, res: Response) => {
     try {
         const { full_name, email_address, secret_code } = req.body;
 
@@ -17,14 +17,14 @@ trafficController.post('/auth/initiate', async (req: Request, res: Response) => 
             return res.status(400).json({ status: 'REJECTED', note: 'Incomplete Dossier' });
         }
 
-        const existingIdentity = await EntityUser.findOne({ digital_contact: email_address });
+        const existingIdentity = await User.findOne({ digital_contact: email_address });
         if (existingIdentity) {
             return res.status(409).json({ status: 'CONFLICT', note: 'Identity Already Registered' });
         }
 
         const secureHash = await encryptSecret(secret_code);
 
-        const newIdentity = new EntityUser({
+        const newIdentity = new User({
             alias_name: full_name,
             digital_contact: email_address,
             access_key: secureHash,
@@ -40,11 +40,11 @@ trafficController.post('/auth/initiate', async (req: Request, res: Response) => 
     }
 });
 
-trafficController.post('/auth/identify', async (req: Request, res: Response) => {
+apiRoutes.post('/auth/identify', async (req: Request, res: Response) => {
     try {
         const { email_address, secret_code } = req.body;
 
-        const targetUser = await EntityUser.findOne({ digital_contact: email_address });
+        const targetUser = await User.findOne({ digital_contact: email_address });
         if (!targetUser) {
             return res.status(404).json({ status: 'MISSING', note: 'Identity Not Found' });
         }
@@ -73,21 +73,21 @@ trafficController.post('/auth/identify', async (req: Request, res: Response) => 
 
 // --- Market Zone (Protected) ---
 
-trafficController.get('/market/opportunities', activeSessionGuard, async (req: ProtectedRequest, res: Response) => {
+apiRoutes.get('/market/opportunities', activeSessionGuard, async (req: ProtectedRequest, res: Response) => {
     try {
         // Return all perks, but maybe hide sensitive details for unverified? 
         // Requirement says "Locked deals cannot be claimed unless verified". 
         // It doesn't strictly say hidden. I will list them but mark them.
-        const allPerks = await EntityPerk.find({});
+        const allPerks = await Deal.find({});
         return res.status(200).json({ status: 'OK', payload: allPerks });
     } catch (err) {
         return res.status(500).json({ status: 'ERROR', note: 'Data Retrieval Failed' });
     }
 });
 
-trafficController.get('/market/opportunities/:id', activeSessionGuard, async (req: ProtectedRequest, res: Response) => {
+apiRoutes.get('/market/opportunities/:id', activeSessionGuard, async (req: ProtectedRequest, res: Response) => {
     try {
-        const perk = await EntityPerk.findById(req.params.id);
+        const perk = await Deal.findById(req.params.id);
         if (!perk) return res.status(404).json({ status: 'MISSING', note: 'Asset Not Found' });
         return res.status(200).json({ status: 'OK', payload: perk });
     } catch (err) {
@@ -97,21 +97,21 @@ trafficController.get('/market/opportunities/:id', activeSessionGuard, async (re
 
 // --- Action Zone (Critically Protected) ---
 
-trafficController.post('/market/claim/:id', activeSessionGuard, verifiedFounderGuard, async (req: ProtectedRequest, res: Response) => {
+apiRoutes.post('/market/claim/:id', activeSessionGuard, verifiedFounderGuard, async (req: ProtectedRequest, res: Response) => {
     try {
         const perkId = req.params.id;
         const userId = req.user_checkpoint.uid;
 
-        const perk = await EntityPerk.findById(perkId);
+        const perk = await Deal.findById(perkId);
         if (!perk) return res.status(404).json({ status: 'MISSING', note: 'Asset Not Found' });
 
         // Check if already claimed?
-        const existingClaim = await EntityClaim.findOne({ beneficiary_id: userId, asset_reference_id: perkId });
+        const existingClaim = await Claim.findOne({ beneficiary_id: userId, asset_reference_id: perkId });
         if (existingClaim) {
             return res.status(400).json({ status: 'DUPLICATE', note: 'Asset Already Claimed' });
         }
 
-        const newClaim = new EntityClaim({
+        const newClaim = new Claim({
             beneficiary_id: userId,
             asset_reference_id: perkId
         });
@@ -131,10 +131,10 @@ trafficController.post('/market/claim/:id', activeSessionGuard, verifiedFounderG
 
 // --- User Dashboard Data ---
 
-trafficController.get('/account/status', activeSessionGuard, async (req: ProtectedRequest, res: Response) => {
+apiRoutes.get('/account/status', activeSessionGuard, async (req: ProtectedRequest, res: Response) => {
     try {
         const userId = req.user_checkpoint.uid;
-        const history = await EntityClaim.find({ beneficiary_id: userId }).populate('asset_reference_id');
+        const history = await Claim.find({ beneficiary_id: userId }).populate('asset_reference_id');
 
         return res.status(200).json({
             status: 'OK',
@@ -147,10 +147,10 @@ trafficController.get('/account/status', activeSessionGuard, async (req: Protect
 
 
 // --- Seeding (Dev Helper - Hidden) ---
-trafficController.post('/dev/seed', async (req: Request, res: Response) => {
+apiRoutes.post('/dev/seed', async (req: Request, res: Response) => {
     // Quick seed for demo purposes
-    await EntityPerk.deleteMany({});
-    await EntityPerk.create([
+    await Deal.deleteMany({});
+    await Deal.create([
         {
             offer_headline: "AWS Credits",
             provider_identity: "Amazon Web Services",
@@ -179,4 +179,4 @@ trafficController.post('/dev/seed', async (req: Request, res: Response) => {
     res.json({ seed: 'complete' });
 });
 
-export default trafficController;
+export default apiRoutes;
