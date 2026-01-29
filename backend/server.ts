@@ -11,27 +11,29 @@ const PORT = process.env.PORT || 4000;
 
 // Security Protocols
 app.use(cors({
-    origin: ['http://localhost:3000', 'http://localhost:3001'], // Restricted access
+    origin: '*', // Allow all origins for deployment troubleshooting
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
 }));
 
 app.use(express.json());
 
+// Mount Router
+app.use('/api/v1', apiRoutes);
+
+app.get('/', (req, res) => {
+    res.send(':: Core System Online ::');
+});
+
 // Boot Sequence
 const bootSystem = async () => {
-    await establishDataLink();
-
-    // Mount Router
-    app.use('/api/v1', apiRoutes);
-
-    app.get('/', (req, res) => {
-        res.send(':: Core System Online ::');
-    });
-
+    // Start Server immediately
     app.listen(PORT, () => {
         console.log(`>> Core System: Active on Port ${PORT}`);
     });
+
+    // Connect Data Link (Non-blocking)
+    establishDataLink();
 };
 
 bootSystem();
